@@ -25,12 +25,12 @@ const Search = () => {
     }
   }, [location.search])
 
-  const handleSearch = async (query: string, relatedId?: number) => {
+  const handleSearch = async (query: string, relatedId: number = -1) => {
     if (query.length === 0) {
       return
     }
 
-    if (relatedId) {
+    if (relatedId !== -1) {
       setIsGettingSimilarPages(true)
     } else {
       setIsGettingSimilarPages(false)
