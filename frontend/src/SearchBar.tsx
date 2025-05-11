@@ -27,7 +27,7 @@ const SearchBar = ({
       onChange={onChange}
       value={value}
       leftSection={<Search size={20} />}
-      data={["hi", "hello", "hey"]}
+      data={JSON.parse(localStorage.getItem("history") || "[]")}
       className="w-[600px]"
       radius="xl"
       onKeyDown={handleKeyDown}
