@@ -5,8 +5,8 @@ from pathlib import Path
 from collections import defaultdict
 from flask_cors import CORS, cross_origin
 
+# Create a connection to the database
 connection = sqlite3.connect('database.db', check_same_thread=False)
-cursor = connection.cursor()
 
 # Flask
 app = Flask(__name__)
@@ -15,29 +15,43 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Get title, last modification date, size by page ID
 def page_id_to_page_info(id: int) -> tuple[str, int, int]:
+    cursor = connection.cursor()
     page_info = cursor.execute("SELECT title, last_modification_date, size FROM pages WHERE page_id = ?", (id,)).fetchone()
+    cursor.close()
     if page_info is None:
         raise ValueError("No page with the given ID is found.")
     return page_info
 
 # Get URL by page ID
 def page_id_to_url(id: int) -> str:
+    cursor = connection.cursor()
     url = cursor.execute("SELECT url FROM pages WHERE page_id = ?", (id,)).fetchone()
+    cursor.close()
     if url is None:
         raise ValueError("No page with the given ID is found.")
     return url[0]
 
 # Get top stems by page ID
 def page_id_to_stems(id: int, num_stems: int = 5, include_title: bool = True) -> list[tuple[str, int]]:
+    cursor = connection.cursor()
     stems_freqs = list(cursor.execute("SELECT keyword_id, keyword_count FROM inverted_index WHERE page_id = ?", (id,)).fetchall())
     if include_title:
         stems_freqs += list(cursor.execute("SELECT keyword_id, keyword_count FROM title_inverted_index WHERE page_id = ?", (id,)).fetchall())
+    
     if not stems_freqs:
+        cursor.close()
         raise ValueError("No page with the given ID is found.")
     
     stems_ids = [stem[0] for stem in stems_freqs]
     freqs = [stem[1] for stem in stems_freqs]
-    stems = [cursor.execute("SELECT keyword FROM keywords WHERE keyword_id = ?", (stem_id,)).fetchone()[0] for stem_id in stems_ids]
+    
+    stems = []
+    for stem_id in stems_ids:
+        result = cursor.execute("SELECT keyword FROM keywords WHERE keyword_id = ?", (stem_id,)).fetchone()
+        if result:
+            stems.append(result[0])
+    
+    cursor.close()
     stems_counts = list(zip(stems, freqs))
     d = defaultdict(int)
     for k, v in stems_counts:
@@ -46,7 +60,13 @@ def page_id_to_stems(id: int, num_stems: int = 5, include_title: bool = True) ->
 
 # Obtain parent or child links by page ID
 def page_id_to_links(id: int, parent: bool = True) -> list[str]:
-    link_ids = cursor.execute("SELECT parent_id FROM parent_child WHERE child_id = ?", (id,)).fetchall() if parent else cursor.execute("SELECT child_id FROM parent_child WHERE parent_id = ?", (id,)).fetchall()
+    cursor = connection.cursor()
+    if parent:
+        link_ids = cursor.execute("SELECT parent_id FROM parent_child WHERE child_id = ?", (id,)).fetchall()
+    else:
+        link_ids = cursor.execute("SELECT child_id FROM parent_child WHERE parent_id = ?", (id,)).fetchall()
+    cursor.close()
+    
     links = []
     for link_id in link_ids:
         try:
@@ -122,7 +142,9 @@ def submit_search():
 @app.route("/keywords", methods=['GET'])
 @cross_origin()
 def get_keywords():
+    cursor = connection.cursor()
     keywords = cursor.execute("SELECT keyword FROM keywords").fetchall()
+    cursor.close()
     keywords = [keyword[0] for keyword in keywords]
     return jsonify(keywords)
 
