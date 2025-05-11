@@ -1,14 +1,17 @@
-from flask import Flask, render_template, make_response, request
+from flask import Flask, render_template, request, jsonify
 import datetime, retrieval, timeit
 import sqlite3
 from pathlib import Path
 from collections import defaultdict
+from flask_cors import CORS, cross_origin
 
 connection = sqlite3.connect('database.db', check_same_thread=False)
 cursor = connection.cursor()
 
 # Flask
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "http://localhost:5173"}})
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 # Get title, last modification date, size by page ID
 def page_id_to_page_info(id: int) -> tuple[str, int, int]:
@@ -74,16 +77,37 @@ def searchbar():
     return render_template("index.html")
 
 # Handle search requests
-@app.route("/search/", methods=['POST'])
+@app.route("/search", methods=['POST'])
+@cross_origin()
 def submit_search():
-    query = request.form.get('searchbar') or ""
+    data = request.get_json()
+    query = data.get('searchbar', "") if data else ""
     start_time = timeit.default_timer()
     search_results_raw = retrieval.search_engine(query)
     search_time_taken = timeit.default_timer() - start_time
     search_results = [SearchResult(ID, score) for ID, score in sorted(search_results_raw.items(), key = lambda x: x[1], reverse = True) if score != 0]
+    
+    response = jsonify({
+        "query": query,
+        "results": [
+            {
+                "id": result.id,
+                "title": result.title,
+                "url": result.url,
+                "time": result.time_formatted,
+                "size": result.size,
+                "keywords": result.keywords,
+                "parent_links": result.parent_links,
+                "child_links": result.child_links,
+                "score": round(result.score, 1),
+            } for result in search_results
+        ],
+        "time_taken": round(search_time_taken * 1000)
+    })
+    return response
 
-    resp = make_response(render_template("search_results.html", QUERY = query, RESULTS = search_results, TIME_TAKEN = search_time_taken))
-    return resp
+    # resp = make_response(render_template("search_results.html", QUERY = query, RESULTS = search_results, TIME_TAKEN = search_time_taken))
+    # return resp
 
 # Flask
 if __name__ == "__main__":
