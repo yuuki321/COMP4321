@@ -4,7 +4,19 @@ Run
 python -m venv venv
 ```
 
-and activate the environment by running the activate script.
+and activate the environment by running the activate script:
+
+On Windows:
+
+```
+venv\Scripts\activate
+```
+
+On macOS/Linux:
+
+```
+source .venv/bin/activate
+```
 
 Install the libraries in venv.
 
