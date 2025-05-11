@@ -1,5 +1,5 @@
 import { type SearchResultType } from "./types"
-import { Button } from "@mantine/core"
+import { Button, Spoiler } from "@mantine/core"
 import Badge from "./Badge"
 import { Anchor } from "@mantine/core"
 import KeywordBadge from "./KeywordBadge"
@@ -40,21 +40,30 @@ const SearchResult = ({ result }: { result: SearchResultType }) => {
             <div className="w-full border-b-[1px] border-[#888888]">
               <span className="text-[14px]">Parent link(s)</span>
             </div>
-            {result.parentLinks.map((link, index) => (
-              <Anchor key={index} href={link} target="_blank" fz={14}>
-                {link}
-              </Anchor>
-            ))}
+            <Spoiler maxHeight={200} showLabel="Show more" hideLabel="Hide">
+              {result.parentLinks.map((link, index) => (
+                <Anchor key={index} href={link} target="_blank" fz={14}>
+                  {link}
+                </Anchor>
+              ))}
+            </Spoiler>
           </div>
           <div className="flex flex-col gap-[8px] w-[412px]">
             <div className="w-full border-b-[1px] border-[#888888]">
               <span className="text-[14px]">Child link(s)</span>
             </div>
-            {result.childLinks.map((link, index) => (
-              <Anchor key={index} href={link} target="_blank" fz={14}>
-                {link}
-              </Anchor>
-            ))}
+            <Spoiler
+              maxHeight={200}
+              showLabel="Show more"
+              hideLabel="Hide"
+              color="blue"
+            >
+              {result.childLinks.map((link, index) => (
+                <Anchor key={index} href={link} target="_blank" fz={14}>
+                  {link}
+                </Anchor>
+              ))}
+            </Spoiler>
           </div>
         </div>
       </div>
