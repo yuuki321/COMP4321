@@ -58,8 +58,8 @@ def get_information(current_url: str, soup: bsoup):
     title = soup.title.string if soup.title else "No Title"
     normalized_url = normalize_url(current_url)
     current_page_id = encode_string(normalized_url)
-    clean_title = ' '.join([re.sub("[^a-zA-Z-]+", "", word).lower() for word in title.split() if word])
-    clean_body = ' '.join([re.sub("[^a-zA-Z-]+", "", word).lower() for word in soup.get_text().split() if word])
+    clean_title = ' '.join([re.sub("[^a-zA-Z-]+", " ", word).lower() for word in title.split() if word])
+    clean_body = ' '.join([re.sub("[^a-zA-Z-]+", " ", word).lower() for word in soup.get_text(separator="\n").split() if word])
     return current_page_id, title, clean_body, clean_title, normalized_url
 
 

@@ -3,6 +3,7 @@ import { MantineProvider, createTheme } from "@mantine/core"
 import { Tabs } from "@mantine/core"
 import Search from "./Search"
 import History from "./History"
+import Keywords from "./Keywords"
 import { Routes, Route, useLocation, useNavigate } from "react-router-dom"
 
 // Create a custom theme with fullscreen app configuration
@@ -65,7 +66,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Search />} />
           <Route path="/history" element={<History />} />
-          <Route path="/keywords" element={<div>Keywords content</div>} />
+          <Route path="/keywords" element={<Keywords />} />
         </Routes>
       </Tabs>
     </MantineProvider>

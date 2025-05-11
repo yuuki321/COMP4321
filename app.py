@@ -106,8 +106,14 @@ def submit_search():
     })
     return response
 
-    # resp = make_response(render_template("search_results.html", QUERY = query, RESULTS = search_results, TIME_TAKEN = search_time_taken))
-    # return resp
+
+@app.route("/keywords", methods=['GET'])
+@cross_origin()
+def get_keywords():
+    keywords = cursor.execute("SELECT keyword FROM keywords").fetchall()
+    keywords = [keyword[0] for keyword in keywords]
+    return jsonify(keywords)
+
 
 # Flask
 if __name__ == "__main__":
