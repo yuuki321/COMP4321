@@ -10,6 +10,8 @@ const Search = () => {
   const [numberOfDocs, setNumberOfDocs] = useState(0)
   const [searchTime, setSearchTime] = useState(0) // in milliseconds
   const [searchResults, setSearchResults] = useState<SearchResultType[]>([])
+  const [isGettingSimilarPages, setIsGettingSimilarPages] = useState(false) // True when the user clicks on "Get Similar Pages" button
+  const [similarPagesTitle, setSimilarPagesTitle] = useState("") // Title of the page for which we are getting similar pages
   const location = useLocation()
 
   useEffect(() => {
@@ -23,9 +25,15 @@ const Search = () => {
     }
   }, [location.search])
 
-  const handleSearch = async (query: string) => {
+  const handleSearch = async (query: string, relatedId?: number) => {
     if (query.length === 0) {
       return
+    }
+
+    if (relatedId) {
+      setIsGettingSimilarPages(true)
+    } else {
+      setIsGettingSimilarPages(false)
     }
 
     try {
@@ -42,12 +50,15 @@ const Search = () => {
         },
         body: JSON.stringify({
           searchbar: query,
+          related_doc: relatedId,
         }),
       })
       if (!response.ok) {
         throw new Error(`Response status: ${response.status}`)
       }
       const data = await response.json()
+      //@ts-expect-error - Result type is expected to be correct
+      data.results = data.results.filter((result) => result.id !== relatedId)
       setNumberOfDocs(data.results.length)
       setSearchTime(data.time_taken)
       setSearchResults(
@@ -65,6 +76,7 @@ const Search = () => {
             keyword: pair[0],
             count: pair[1],
           })),
+          id: result.id,
         }))
       )
     } catch (error) {
@@ -84,12 +96,22 @@ const Search = () => {
           onSubmit={handleSearch}
         />
         <span>
-          Retrieved {numberOfDocs} document(s) in {searchTime}ms.
+          Retrieved {numberOfDocs} document(s){" "}
+          {isGettingSimilarPages ? `related to ${similarPagesTitle}` : ""} in{" "}
+          {searchTime}ms.
         </span>
       </div>
 
       {searchResults.map((result, index) => (
-        <SearchResult key={index} result={result} />
+        <SearchResult
+          key={index}
+          result={result}
+          isGettingSimilarPages={isGettingSimilarPages}
+          getSimilarPages={(id: number, title: string) => {
+            setSimilarPagesTitle(title)
+            handleSearch(query, id)
+          }}
+        />
       ))}
     </Layout>
   )

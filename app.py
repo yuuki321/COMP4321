@@ -82,8 +82,9 @@ def searchbar():
 def submit_search():
     data = request.get_json()
     query = data.get('searchbar', "") if data else ""
+    related_doc = data.get('related_doc', -1) if data else -1
     start_time = timeit.default_timer()
-    search_results_raw = retrieval.search_engine(query)
+    search_results_raw = retrieval.search_engine(query, related_doc)
     search_time_taken = timeit.default_timer() - start_time
     search_results = [SearchResult(ID, score) for ID, score in sorted(search_results_raw.items(), key = lambda x: x[1], reverse = True) if score != 0]
     

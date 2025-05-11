@@ -12,4 +12,5 @@ export type SearchResultType = {
   childLinks: string[]
   score: number // rounded to 1 decimal place
   keywords: Keyword[]
+  id: number
 }

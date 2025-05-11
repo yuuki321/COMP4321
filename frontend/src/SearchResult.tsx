@@ -4,7 +4,17 @@ import Badge from "./Badge"
 import { Anchor } from "@mantine/core"
 import KeywordBadge from "./KeywordBadge"
 
-const SearchResult = ({ result }: { result: SearchResultType }) => {
+type SearchResultProps = {
+  result: SearchResultType
+  isGettingSimilarPages: boolean
+  getSimilarPages: (id: number, title: string) => void
+}
+
+const SearchResult = ({
+  result,
+  isGettingSimilarPages,
+  getSimilarPages,
+}: SearchResultProps) => {
   return (
     <div className="flex flex-row items-center">
       <div className="flex flex-col w-[120px] gap-[16px] items-center">
@@ -17,7 +27,14 @@ const SearchResult = ({ result }: { result: SearchResultType }) => {
           <span className="text-[20px] text-[#228BE6] text-wrap">
             {result.title}
           </span>
-          <Button variant="light">Get Similar Pages</Button>
+          {!isGettingSimilarPages && (
+            <Button
+              variant="light"
+              onClick={() => getSimilarPages(result.id, result.title)}
+            >
+              Get Similar Pages
+            </Button>
+          )}
         </div>
 
         <Anchor href={result.url} target="_blank" fz={14}>

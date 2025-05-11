@@ -70,11 +70,27 @@ def queryFilter(document_id: int, query: list[int]) -> bool:
     return any(word in Title_globalPageDict[document_id] or word in Text_globalPageDict[document_id] for word in query) if query else True
 
 # Start searching
-def search_engine(query: str) -> dict[int, float]:
+def search_engine(query: str, related_doc: int = -1) -> dict[int, float]:
+    """ Returns a dictionary containing the search results. A related document can be optinally specified to improve the search results.
+
+    Args:
+        query (str): The search query.
+        related_doc (int, optional): The ID of a related document to improve the search results. Defaults to -1.
+    """
     if not query: return {}
     splitted_query = parser(query)
-    if not splitted_query[0]: return {}
     vector1 = queryToVec(splitted_query[0])
+
+    # Query modification
+    if related_doc != -1:
+        related_doc = cursor.execute("SELECT page_id FROM pages WHERE page_id = ?", (related_doc,)).fetchone()
+        if not related_doc: return {}
+        related_doc = related_doc[0]
+        document_vec = documentToVec(related_doc)
+        document_vec = {word: score / 2 for word, score in document_vec.items()}
+        vector1 = {word: score + document_vec.get(word, 0) for word, score in vector1.items()}
+        
+    if not splitted_query[0]: return {}
     title_cosinescores, text_cosinescores = {}, {}
     for document in allDocs:
         document = document[0]
