@@ -12,7 +12,12 @@ const Search = () => {
   const [searchResults, setSearchResults] = useState<SearchResultType[]>([])
   const [isGettingSimilarPages, setIsGettingSimilarPages] = useState(false) // True when the user clicks on "Get Similar Pages" button
   const [similarPagesTitle, setSimilarPagesTitle] = useState("") // Title of the page for which we are getting similar pages
+  const [isSearching, setIsSearching] = useState(false) // True when the user is searching for a query
   const location = useLocation()
+
+  useEffect(() => {
+    setIsSearching(false)
+  }, [])
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -35,6 +40,8 @@ const Search = () => {
     } else {
       setIsGettingSimilarPages(false)
     }
+
+    setIsSearching(true)
 
     try {
       const currentHistory = JSON.parse(localStorage.getItem("history") || "[]")
@@ -95,11 +102,18 @@ const Search = () => {
           value={query}
           onSubmit={handleSearch}
         />
-        <span>
-          Retrieved {numberOfDocs} document(s){" "}
-          {isGettingSimilarPages ? `related to ${similarPagesTitle}` : ""} in{" "}
-          {searchTime}ms.
-        </span>
+        {isSearching &&
+          (searchResults.length > 0 ? (
+            <span>
+              Retrieved {numberOfDocs} document(s)
+              {isGettingSimilarPages
+                ? ` related to "${similarPagesTitle}"`
+                : `for "${query}"`}{" "}
+              in {searchTime}ms.
+            </span>
+          ) : (
+            <span>No results found for "{query}"</span>
+          ))}
       </div>
 
       {searchResults.map((result, index) => (

@@ -86,6 +86,17 @@ def submit_search():
     start_time = timeit.default_timer()
     search_results_raw = retrieval.search_engine(query, related_doc)
     search_time_taken = timeit.default_timer() - start_time
+
+    filtered_results = [(ID, score) for ID, score in search_results_raw.items() if score != 0]
+    
+    # If no results, return early with an empty results array
+    if not filtered_results:
+        return jsonify({
+            "query": query,
+            "results": [],
+            "time_taken": round(search_time_taken * 1000)
+        })
+
     search_results = [SearchResult(ID, score) for ID, score in sorted(search_results_raw.items(), key = lambda x: x[1], reverse = True) if score != 0]
     
     response = jsonify({
